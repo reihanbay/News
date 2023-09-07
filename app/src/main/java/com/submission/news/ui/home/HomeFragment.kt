@@ -6,56 +6,96 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.submission.news.R
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
+import com.submission.news.data.news.model.NewsDataClass
+import com.submission.news.databinding.FragmentHomeBinding
+import com.submission.news.ui.home.adapter.NewsAdapter
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import com.submission.news.utils.api.Result
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [HomeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class HomeFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private var binding : FragmentHomeBinding? = null
+    private val bind get() = binding!!
+    private val viewModel : NewsViewModel by viewModel()
+    private val rvAdapter : NewsAdapter by lazy { NewsAdapter() }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
+        binding = FragmentHomeBinding.inflate(inflater, container, false)
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        return bind.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment HomeFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            HomeFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.getNews()
+
+        initObserver()
+        setRv()
+        initAction()
+
+    }
+
+    private fun initAction() {
+        bind.refresh.setOnRefreshListener {
+            viewModel.getNews()
+            bind.refresh.isRefreshing = false
+        }
+
+        rvAdapter.setOnClickListener(object : NewsAdapter.SetOnClickListener{
+            override fun setOnClicked(data: NewsDataClass) {
+                findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToDetailFragment(data))
+            }
+        })
+
+        bind.aboutPage.setOnClickListener {
+            findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToProfileFragment())
+        }
+    }
+
+    private fun setRv() {
+        bind.rvNews.apply {
+            adapter = rvAdapter
+            layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
+            setHasFixedSize(true)
+        }
+    }
+
+    private fun initObserver() {
+        viewModel.getNews.observe(viewLifecycleOwner) {
+            when(it) {
+                is Result.Loading -> {
+                    bind.progressHorizontal.isVisible = true
+                    bind.rvNews.isGone = true
+                }
+                is Result.Default -> {
+                    bind.progressHorizontal.isGone = true
+                    bind.ivEmpty.isVisible = false
+
+                }
+                is Result.Empty -> {
+                    bind.ivEmpty.isVisible = true
+                }
+                is Result.Success -> {
+                    bind.ivEmpty.isVisible = false
+                    bind.rvNews.isVisible= true
+                    bind.progressHorizontal.isGone = true
+                    rvAdapter.setData(it.data.articles)
+                }
+                is Result.Failure -> {
+                    Snackbar.make(bind.root, it.message.toString(), Snackbar.LENGTH_LONG).show()
                 }
             }
+        }
     }
+
 }

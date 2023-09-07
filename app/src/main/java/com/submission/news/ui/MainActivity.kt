@@ -2,11 +2,19 @@ package com.submission.news.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.submission.news.R
+import android.view.LayoutInflater
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.submission.news.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+    private var binding : ActivityMainBinding? = null
+    private val bind get() = binding!!
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(LayoutInflater.from(this))
+        setContentView(bind.root)
+
     }
 }
