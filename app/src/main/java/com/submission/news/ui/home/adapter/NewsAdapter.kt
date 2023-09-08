@@ -3,6 +3,8 @@ package com.submission.news.ui.home.adapter
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.submission.news.R
@@ -12,11 +14,18 @@ import com.submission.news.utils.helper.DateUtils
 
 class NewsAdapter() : RecyclerView.Adapter<NewsAdapter.NewsViewHolder>() {
     val list: MutableList<NewsDataClass> = mutableListOf()
-
+    var count = list.size
+    var isLogin = false
     private lateinit var setOnClick: SetOnClickListener
     fun setOnClickListener(click: SetOnClickListener) {
         setOnClick = click
     }
+
+    fun setSession(hasLogin: Boolean) {
+        isLogin = hasLogin
+        notifyItemChanged(14)
+    }
+
 
     @SuppressLint("NotifyDataSetChanged")
     fun setData(items : List<NewsDataClass>) {
@@ -41,10 +50,11 @@ class NewsAdapter() : RecyclerView.Adapter<NewsAdapter.NewsViewHolder>() {
             containerRv.setOnClickListener {
                 setOnClick.setOnClicked(data)
             }
+            if (position == 14) tvInfo.isGone = isLogin
         }
     }
 
-    override fun getItemCount(): Int = if (list.size == 0) 0  else 15 //Maksimalkan 15 Data saja
+    override fun getItemCount(): Int = if (isLogin) list.size else if (list.size == 0) 0  else 15//Maksimalkan 15 Data saja
 
     interface SetOnClickListener {
         fun setOnClicked(data: NewsDataClass)

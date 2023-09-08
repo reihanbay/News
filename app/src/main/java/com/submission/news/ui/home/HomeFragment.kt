@@ -15,6 +15,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.submission.news.data.news.model.NewsDataClass
 import com.submission.news.databinding.FragmentHomeBinding
 import com.submission.news.ui.home.adapter.NewsAdapter
+import com.submission.news.ui.login.LoginViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import com.submission.news.utils.api.Result
 
@@ -23,6 +24,7 @@ class HomeFragment : Fragment() {
     private var binding : FragmentHomeBinding? = null
     private val bind get() = binding!!
     private val viewModel : NewsViewModel by viewModel()
+    private val authVm : LoginViewModel by viewModel()
     private val rvAdapter : NewsAdapter by lazy { NewsAdapter() }
 
 
@@ -37,8 +39,9 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.getNews()
 
+
+        viewModel.getNews()
         initObserver()
         setRv()
         initAction()
@@ -58,7 +61,7 @@ class HomeFragment : Fragment() {
         })
 
         bind.aboutPage.setOnClickListener {
-            findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToProfileFragment())
+            findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToAboutFragment())
         }
     }
 
@@ -68,6 +71,8 @@ class HomeFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
             setHasFixedSize(true)
         }
+
+        rvAdapter.setSession(authVm.checkLogin())
     }
 
     private fun initObserver() {
